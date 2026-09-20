@@ -1,0 +1,36 @@
+name: discover
+
+on:
+  schedule:
+    - cron: "0 1 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: Discover new target companies
+        run: python -m scripts.discover_targets
+
+      - name: Pull published founder contacts
+        run: python -m scripts.discover_contacts
+        continue-on-error: true
+
+      - name: Commit updated target list
+        run: |
+          git config user.name "signal-engine"
+          git config user.email "actions@github.com"
+          git add config/targets.yaml
+          git diff --staged --quiet || git commit -m "discover: refresh target list"
+          git push
