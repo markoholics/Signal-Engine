@@ -78,6 +78,11 @@ signals:
 # the scorer squashes with a logistic so a single 0.9 signal cannot alone
 # push an account into the send queue.
 byosync_weights:
+  enterprise_tier_added:          0.9
+  certification_first_mentioned:  0.95
+  subprocessor_list_published:    0.7
+  security_page_published:        0.6
+  watched_page_changed:           0.15
   hiring_security_role:       1.0
   jd_mentions_compliance:     1.0
   enterprise_logo_announced:  0.95
