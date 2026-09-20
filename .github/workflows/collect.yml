@@ -1,0 +1,40 @@
+name: collect
+
+on:
+  schedule:
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: ATS job boards
+        run: python -m collectors.ats_jobs
+        continue-on-error: true
+      - name: Certificate transparency
+        run: python -m collectors.cert_transparency
+        continue-on-error: true
+      - name: GitHub metadata
+        run: python -m collectors.github_meta
+        continue-on-error: true
+      - name: News and funding RSS
+        run: python -m collectors.news_rss
+        continue-on-error: true
+      - name: Launch feeds
+        run: python -m collectors.launch_feeds
+        continue-on-error: true
+
+      - name: Refresh ICP fit
+        run: python -m core.fit
+      - name: Ranked accounts
+        run: python -m core.score
