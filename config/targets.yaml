@@ -1,8 +1,4 @@
 companies:
-- domain: example-ai.in
-  name: ExampleAI
-- domain: another-saas.com
-  name: AnotherSaaS
 - domain: apollofirst.xyz
   name: Apollo
 - domain: inferedge.com
@@ -21,8 +17,6 @@ companies:
   name: RedBrick AI
 - domain: bharatx.tech
   name: BharatX
-- domain: play.google.com
-  name: RecordBook
 - domain: salt.pe
   name: SALT
 - domain: imt.care
@@ -93,15 +87,8 @@ companies:
   name: Perseus
 - domain: cardboard.ai
   name: Cardboard
-ats:
-- board: greenhouse
-  slug: example-ai
-  domain: example-ai.in
-  name: ExampleAI
-github:
-- org: example-ai
-  domain: example-ai.in
-  name: ExampleAI
+ats: []
+github: []
 hn_queries:
 - Launch HN India
 - Show HN India AI
