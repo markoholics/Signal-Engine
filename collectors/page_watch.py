@@ -1,139 +1,115 @@
-"""Source 6: watch each company's own public pages for changes.
+"""Source 6: watch the company's own public pages for change.
 
-The highest intent signal available for a security and compliance buyer is not
-on a job board. It is on the prospect's own site. When an Enterprise tier
-appears on the pricing page, or a /security page shows up, or a sub-processor
-list is published, somebody's procurement team has just asked hard questions.
+This is the highest intent signal available for a security and compliance
+buyer, and almost nobody collects it. When a company publishes a /security
+page, adds an Enterprise pricing tier, or names SOC 2 for the first time, a
+customer has just asked them hard questions. That is the week to call.
 
-Method: fetch a small set of well known paths weekly, reduce each page to a
-fingerprint of the facts we care about, and store it. Next week, compare. A
-change fires a signal. The first run establishes the baseline and fires
-nothing, which is correct and not a failure.
-
-We fetch the same pages a customer evaluating them would fetch, at one request
-per second, and we read text only. Nothing here probes for weaknesses.
+We fetch the same public pages a prospective customer would read, once a week,
+and compare against last week's fingerprint. We store a hash and a handful of
+extracted facts, never the page content.
 """
 import re, json, yaml, hashlib, datetime as dt
 from pathlib import Path
-import requests
+from collectors.base import get, dedupe
 from core.db import conn, upsert_company, insert_signal
 
-CFG = Path(__file__).parent.parent / "config" / "targets.yaml"
-UA = {"User-Agent": "signal-engine/0.1 (+markoholics.com)"}
-
-PATHS = ["/pricing", "/security", "/trust", "/careers", "/jobs",
-         "/legal/sub-processors", "/subprocessors", "/compliance"]
-
-# What we look for in the text. Each is a fact that, once true, means something.
-MARKERS = {
-    "enterprise_tier":   re.compile(r"\benterprise\b.{0,40}(plan|tier|pricing|contact sales)", re.I),
-    "soc2_claim":        re.compile(r"\bsoc\s?2\b", re.I),
-    "iso27001_claim":    re.compile(r"\biso[\s/-]?27001\b", re.I),
-    "dpdp_claim":        re.compile(r"\bdpdp\b|digital personal data protection", re.I),
-    "gdpr_claim":        re.compile(r"\bgdpr\b", re.I),
-    "hipaa_claim":       re.compile(r"\bhipaa\b", re.I),
-    "subprocessor_list": re.compile(r"\bsub[-\s]?processor", re.I),
-    "trust_centre":      re.compile(r"\btrust (cent|port|page)", re.I),
-    "security_hiring":   re.compile(r"\b(security engineer|appsec|infosec|security lead)\b", re.I),
-    "ai_hiring":         re.compile(r"\b(ml engineer|ai engineer|llm engineer)\b", re.I),
+PAGES = {
+    "security": ["/security", "/trust", "/security-policy", "/trust-center"],
+    "pricing":  ["/pricing", "/plans", "/pricing-plans"],
+    "careers":  ["/careers", "/jobs", "/join-us", "/work-with-us"],
 }
 
-# What a newly appeared marker is worth, and what it means.
-ON_APPEAR = {
-    "enterprise_tier":   ("enterprise_tier_added", 0.8),
-    "soc2_claim":        ("compliance_claim_added", 0.85),
-    "iso27001_claim":    ("compliance_claim_added", 0.85),
-    "dpdp_claim":        ("compliance_claim_added", 0.8),
-    "gdpr_claim":        ("compliance_claim_added", 0.6),
-    "hipaa_claim":       ("compliance_claim_added", 0.75),
-    "subprocessor_list": ("subprocessor_list_published", 0.7),
-    "trust_centre":      ("trust_page_published", 0.75),
-    "security_hiring":   ("hiring_security_role", 0.9),
-    "ai_hiring":         ("hiring_ai_engineer", 0.55),
-}
+ENTERPRISE = re.compile(r"\b(enterprise|custom pricing|talk to sales|contact sales)\b", re.I)
+CERTS      = re.compile(r"\b(soc\s?2|iso\s?27001|dpdp|gdpr|hipaa|pci[- ]dss)\b", re.I)
+SUBPROC    = re.compile(r"\b(sub[- ]?processor|data processing addendum|dpa)\b", re.I)
+SEC_ROLE   = re.compile(r"\b(security engineer|appsec|infosec|security lead|grc|compliance manager)\b", re.I)
+AI_ROLE    = re.compile(r"\b(ml engineer|ai engineer|llm|applied scientist|machine learning)\b", re.I)
+DEVOPS     = re.compile(r"\b(devops|sre|platform engineer|infrastructure engineer)\b", re.I)
 
-def text_of(html):
-    t = re.sub(r"<script.*?</script>|<style.*?</style>", " ", html, flags=re.S | re.I)
-    t = re.sub(r"<[^>]+>", " ", t)
-    return re.sub(r"\s+", " ", t)[:200000]
+def strip_html(html):
+    html = re.sub(r"<script.*?</script>|<style.*?</style>", " ", html, flags=re.S | re.I)
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html)).strip()
 
-def fetch(domain, path):
-    for scheme in ("https://", "https://www."):
-        try:
-            r = requests.get(scheme + domain + path, headers=UA, timeout=20,
-                             allow_redirects=True)
-            if r.status_code == 200 and len(r.text) > 500:
-                return r.text
-        except Exception:
-            continue
-    return None
+def facts_for(kind, text):
+    if kind == "security":
+        return {"exists": True,
+                "certs": sorted({m.lower().replace(" ", "") for m in CERTS.findall(text)}),
+                "subprocessors": bool(SUBPROC.search(text))}
+    if kind == "pricing":
+        return {"enterprise_tier": bool(ENTERPRISE.search(text)),
+                "certs": sorted({m.lower().replace(" ", "") for m in CERTS.findall(text)})}
+    return {"security_role": bool(SEC_ROLE.search(text)),
+            "ai_role": bool(AI_ROLE.search(text)),
+            "devops_role": bool(DEVOPS.search(text)),
+            "mentions_certs": sorted({m.lower().replace(" ", "") for m in CERTS.findall(text)})}
 
-def fingerprint(domain):
-    """Which markers are currently true anywhere on this company's public pages."""
-    found = set()
-    pages_seen = 0
-    import time
-    for p in PATHS:
-        html = fetch(domain, p)
-        time.sleep(1.0)
-        if not html:
-            continue
-        pages_seen += 1
-        txt = text_of(html)
-        for key, rx in MARKERS.items():
-            if rx.search(txt):
-                found.add(key)
-    return found, pages_seen
+def fetch_first(domain, paths):
+    for p in paths:
+        for scheme in ("https://", "https://www."):
+            url = f"{scheme}{domain}{p}"
+            try:
+                r = get(url)
+            except Exception:
+                continue
+            if len(r.text) > 500:
+                return url, strip_html(r.text)[:40000]
+    return None, None
+
+def previous(cur, company_id, kind):
+    cur.execute("""select content_hash, facts from page_snapshot
+                   where company_id=%s and page_kind=%s
+                   order by captured_at desc limit 1""", (company_id, kind))
+    return cur.fetchone()
 
 def run(companies):
     now = dt.datetime.now(dt.timezone.utc)
-    first_run = changed = 0
     with conn() as c, c.cursor() as cur:
         for comp in companies:
-            dom = comp["domain"]
-            if dom in ("play.google.com",):
-                continue
-            found, pages = fingerprint(dom)
-            if pages == 0:
-                print(f"  {dom}: no readable pages")
-                continue
-            cid = upsert_company(c, dom, comp.get("name"))
+            dom, name = comp["domain"], comp.get("name")
+            cid = upsert_company(c, dom, name)
+            for kind, paths in PAGES.items():
+                url, text = fetch_first(dom, paths)
+                if not text:
+                    continue
+                facts = facts_for(kind, text)
+                h = hashlib.sha1(text.encode()).hexdigest()
+                prev = previous(cur, cid, kind)
+                prev_facts = (prev[1] if prev else {}) or {}
 
-            cur.execute("""select payload->'markers' from signal_event
-                           where company_id=%s and signal_type='page_baseline'
-                           order by observed_at desc limit 1""", (cid,))
-            row = cur.fetchone()
-            previous = set(row[0]) if row and row[0] else None
+                emit = []
+                if kind == "security" and not prev:
+                    emit.append(("security_page_published", 0.8))
+                if kind == "pricing":
+                    if facts["enterprise_tier"] and not prev_facts.get("enterprise_tier"):
+                        emit.append(("enterprise_tier_added", 0.85))
+                if kind == "careers":
+                    if facts["security_role"] and not prev_facts.get("security_role"):
+                        emit.append(("hiring_security_role", 0.9))
+                    if facts["ai_role"] and not prev_facts.get("ai_role"):
+                        emit.append(("hiring_ai_engineer", 0.55))
+                    if facts["devops_role"] and not prev_facts.get("devops_role"):
+                        emit.append(("hiring_devops_infra", 0.5))
+                new_certs = set(facts.get("certs") or facts.get("mentions_certs") or []) - \
+                            set(prev_facts.get("certs") or prev_facts.get("mentions_certs") or [])
+                if new_certs and prev:
+                    emit.append(("certification_first_mentioned", 0.9))
+                if facts.get("subprocessors") and not prev_facts.get("subprocessors"):
+                    emit.append(("subprocessor_list_published", 0.7))
+                if prev and prev[0] != h and not emit:
+                    emit.append(("watched_page_changed", 0.25))
 
-            if previous is None:
-                insert_signal(c, cid, "pagewatch", "page_baseline", 0.0, now,
-                              json.dumps({"markers": sorted(found), "pages": pages}),
-                              f"https://{dom}",
-                              hashlib.sha1(f"baseline|{dom}|{now.date()}".encode()).hexdigest())
-                first_run += 1
-                print(f"  {dom}: baseline set, {len(found)} markers across {pages} pages")
-                continue
+                for stype, strength in emit:
+                    insert_signal(c, cid, "pagewatch", stype, strength, now,
+                                  json.dumps({"page": kind, **facts}), url,
+                                  dedupe("pw", dom, kind, stype, now.strftime("%Y-%W")))
+                    print(f"  {dom}: {stype} ({kind})")
 
-            appeared = found - previous
-            for m in appeared:
-                stype, strength = ON_APPEAR[m]
-                insert_signal(c, cid, "pagewatch", stype, strength, now,
-                              json.dumps({"marker": m, "page_count": pages}),
-                              f"https://{dom}",
-                              hashlib.sha1(f"appear|{dom}|{m}|{now.strftime('%Y-%W')}".encode()).hexdigest())
-                print(f"  {dom}: NEW {m} -> {stype}")
-                changed += 1
-
-            insert_signal(c, cid, "pagewatch", "page_baseline", 0.0, now,
-                          json.dumps({"markers": sorted(found), "pages": pages}),
-                          f"https://{dom}",
-                          hashlib.sha1(f"baseline|{dom}|{now.date()}".encode()).hexdigest())
-
-    print(f"\n{first_run} baselines established, {changed} changes detected")
-    if first_run and not changed:
-        print("First run establishes the baseline and fires nothing. "
-              "Changes appear from next week onwards.")
+                cur.execute("""insert into page_snapshot
+                               (company_id, page_kind, url, content_hash, facts)
+                               values (%s,%s,%s,%s,%s::jsonb)""",
+                            (cid, kind, url, h, json.dumps(facts)))
 
 if __name__ == "__main__":
-    cfg = yaml.safe_load(CFG.read_text())
+    cfg = yaml.safe_load((Path(__file__).parent.parent/"config"/"targets.yaml").read_text())
     run(cfg.get("companies", []))
