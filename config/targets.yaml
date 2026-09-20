@@ -87,6 +87,8 @@ companies:
   name: Perseus
 - domain: cardboard.ai
   name: Cardboard
+- domain: play.google.com
+  name: RecordBook
 ats: []
 github: []
 hn_queries:
