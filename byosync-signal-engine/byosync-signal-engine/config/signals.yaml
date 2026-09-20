@@ -1,0 +1,112 @@
+# Signal taxonomy. Strength is the raw 0..1 value a collector may emit.
+# Weight is how much the ByoSync lens cares. Both are deliberately hand set for
+# days 1 to 90. The scorer replaces weights with learned ones only after the
+# ledger holds enough labelled outcomes.
+
+signals:
+
+  # --- Source 1: public ATS job boards (Greenhouse, Lever, Ashby) ---
+  hiring_security_role:
+    description: Posting for a security, appsec or compliance role
+    default_strength: 0.9
+    note: Strongest single signal. They have admitted the gap and have budget.
+  hiring_devops_infra:
+    description: Posting for DevOps, SRE or platform engineering
+    default_strength: 0.5
+  hiring_ai_engineer:
+    description: Posting for ML, LLM or AI engineering
+    default_strength: 0.55
+    note: AI surface expanding, usually faster than governance.
+  jd_mentions_compliance:
+    description: Job description mentions SOC 2, ISO 27001, DPDP or HIPAA
+    default_strength: 0.8
+    note: An enterprise deal is forcing the question.
+  hiring_velocity_spike:
+    description: Three or more open roles opened in 30 days
+    default_strength: 0.45
+
+  # --- Source 2: certificate transparency (crt.sh) ---
+  new_api_subdomain:
+    description: New api. or app. subdomain certificate issued
+    default_strength: 0.7
+    note: New external surface area, the moment before anyone secures it.
+  subdomain_sprawl:
+    description: Five or more new subdomains in 60 days
+    default_strength: 0.5
+  staging_exposed:
+    description: Publicly resolving staging, dev or uat subdomain
+    default_strength: 0.6
+
+  # --- Source 3: GitHub public metadata ---
+  llm_sdk_adopted:
+    description: openai, anthropic, langchain or llamaindex added to manifest
+    default_strength: 0.65
+    note: Agentic surface introduced. Core to Product 2.
+  no_security_policy:
+    description: Public repos with no SECURITY.md and no dependabot config
+    default_strength: 0.35
+  high_commit_velocity:
+    description: Shipping fast on a public product repo
+    default_strength: 0.3
+  new_integration_dep:
+    description: Payment, auth or messaging SDK added
+    default_strength: 0.45
+    note: Feeds the "2+ integrations handling sensitive data" ICP clause.
+
+  # --- Source 4: funding and company news RSS ---
+  funding_round:
+    description: Seed, pre-A or Series A announced
+    default_strength: 0.75
+    note: Budget appears and enterprise buyers start asking for proof.
+  enterprise_logo_announced:
+    description: Announced a bank, insurer, healthcare or government customer
+    default_strength: 0.85
+    note: Their customer's procurement team is about to become our ally.
+  leadership_hire_eng:
+    description: New CTO, VP Engineering or head of platform
+    default_strength: 0.5
+
+  # --- Source 5: launch feeds (Product Hunt, Hacker News, YC) ---
+  product_launch:
+    description: Public launch of an AI product
+    default_strength: 0.6
+  api_public_beta:
+    description: Opened a public API or developer platform
+    default_strength: 0.7
+
+# ByoSync lens. Weights multiply strength. Sum is not normalised on purpose:
+# the scorer squashes with a logistic so a single 0.9 signal cannot alone
+# push an account into the send queue.
+byosync_weights:
+  hiring_security_role:       1.0
+  jd_mentions_compliance:     1.0
+  enterprise_logo_announced:  0.95
+  new_api_subdomain:          0.8
+  funding_round:              0.8
+  api_public_beta:            0.75
+  llm_sdk_adopted:            0.75
+  hiring_ai_engineer:         0.6
+  staging_exposed:            0.6
+  product_launch:             0.55
+  new_integration_dep:        0.55
+  hiring_devops_infra:        0.5
+  subdomain_sprawl:           0.5
+  leadership_hire_eng:        0.5
+  hiring_velocity_spike:      0.45
+  no_security_policy:         0.35
+  high_commit_velocity:       0.25
+
+# Combination rules. Two signals that co-occur inside the window are worth
+# more than the sum of their parts. These are the hypotheses the 90 days test.
+combos:
+  - name: surface_without_owner
+    requires: [new_api_subdomain, hiring_ai_engineer]
+    bonus: 0.25
+    hypothesis: Shipping AI surface with no security hire is the sharpest moment.
+  - name: forced_by_buyer
+    requires: [enterprise_logo_announced, jd_mentions_compliance]
+    bonus: 0.3
+    hypothesis: A procurement review is already underway.
+  - name: funded_and_scaling
+    requires: [funding_round, hiring_velocity_spike]
+    bonus: 0.2
