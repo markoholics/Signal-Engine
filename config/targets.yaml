@@ -89,8 +89,107 @@ companies:
   name: Cardboard
 - domain: play.google.com
   name: RecordBook
-ats: []
-github: []
+ats:
+- board: greenhouse
+  slug: imt
+  domain: imt.care
+  name: IMT Care
+- board: ashby
+  slug: craze
+  domain: craze.ai
+  name: Craze
+- board: greenhouse
+  slug: raven
+  domain: startraven.com
+  name: Raven
+- board: ashby
+  slug: clueso
+  domain: clueso.io
+  name: Clueso
+- board: ashby
+  slug: bolna
+  domain: bolna.ai
+  name: Bolna AI
+- board: ashby
+  slug: cardboard
+  domain: cardboard.ai
+  name: Cardboard
+github:
+- org: apollo
+  domain: apollofirst.xyz
+  name: Apollo
+- org: fieldproxy
+  domain: fieldproxy.com
+  name: Fieldproxy
+- org: rdash
+  domain: rdash.io
+  name: RDash
+- org: castledio
+  domain: castled.io
+  name: Castled.io
+- org: redbrick-ai
+  domain: redbrickai.com
+  name: RedBrick AI
+- org: imt
+  domain: imt.care
+  name: IMT Care
+- org: spadeworks
+  domain: spadeworks.co
+  name: SpadeWorks
+- org: kaagaz
+  domain: kaagaz.app
+  name: Kaagaz
+- org: blitzllama
+  domain: blitzllama.com
+  name: Blitzllama
+- org: savein
+  domain: savein.money
+  name: SaveIN
+- org: avairsense
+  domain: avairsense.com
+  name: AvairSense
+- org: coupl
+  domain: coupl.money
+  name: Coupl
+- org: gullakmoney
+  domain: gullak.money
+  name: Gullak Money
+- org: slidely-ai
+  domain: slidely.ai
+  name: Slidely AI
+- org: peoplebox
+  domain: peoplebox.ai
+  name: Peoplebox.ai
+- org: maya-labs
+  domain: mayalabs.io
+  name: Maya Labs
+- org: landeed
+  domain: landeed.com
+  name: Landeed
+- org: getcone
+  domain: getcone.io
+  name: Cone
+- org: floworks
+  domain: floworks.ai
+  name: Floworks
+- org: superkalam
+  domain: superkalam.com
+  name: SuperKalam
+- org: yenmo
+  domain: yenmo.in
+  name: Yenmo
+- org: infinityapp
+  domain: infinityapp.in
+  name: Infinity
+- org: optifye
+  domain: optifye.ai
+  name: Optifye.ai
+- org: bolna-ai
+  domain: bolna.ai
+  name: Bolna AI
+- org: play
+  domain: play.google.com
+  name: RecordBook
 hn_queries:
 - Launch HN India
 - Show HN India AI
