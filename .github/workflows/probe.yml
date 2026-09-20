@@ -1,0 +1,24 @@
+name: probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.probe_sources
+      - run: |
+          git config user.name "signal-engine"
+          git config user.email "actions@github.com"
+          git add config/targets.yaml
+          git diff --staged --quiet || git commit -m "probe: fill ats and github sources"
+          git push
