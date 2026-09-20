@@ -1,33 +1,109 @@
-# Seed target list. Start with 150 to 300 companies matching the ByoSync ICP:
-# Indian AI native SaaS or tech MSME, 4 to 100 people, live product, sensitive
-# data, two or more integrations, no security team.
-#
-# Where to source the seed list for free: YC India batches, Product Hunt India,
-# Inc42 and YourStory funding coverage, NASSCOM DeepTech listings, SaaSBoomi
-# member pages, AWS and Google for Startups India cohorts, and the companies
-# already in the Apollo organisation lookup (that endpoint works on the
-# current plan even though people search does not).
-
 companies:
-  - domain: example-ai.in
-    name: ExampleAI
-  - domain: another-saas.com
-    name: AnotherSaaS
-
+- domain: example-ai.in
+  name: ExampleAI
+- domain: another-saas.com
+  name: AnotherSaaS
+- domain: apollofirst.xyz
+  name: Apollo
+- domain: inferedge.com
+  name: InferEdge
+- domain: fieldproxy.com
+  name: Fieldproxy
+- domain: rehook.ai
+  name: Rehook.ai
+- domain: rdash.io
+  name: RDash
+- domain: castled.io
+  name: Castled.io
+- domain: nationalfinanceolympiad.com
+  name: National Finance Olympiad
+- domain: redbrickai.com
+  name: RedBrick AI
+- domain: bharatx.tech
+  name: BharatX
+- domain: play.google.com
+  name: RecordBook
+- domain: salt.pe
+  name: SALT
+- domain: imt.care
+  name: IMT Care
+- domain: spadeworks.co
+  name: SpadeWorks
+- domain: kaagaz.app
+  name: Kaagaz
+- domain: paycrunch.in
+  name: PayCrunch
+- domain: blitzllama.com
+  name: Blitzllama
+- domain: savein.money
+  name: SaveIN
+- domain: fello.in
+  name: Fello
+- domain: avairsense.com
+  name: AvairSense
+- domain: betteropinions.in
+  name: Better Opinions
+- domain: coupl.money
+  name: Coupl
+- domain: integrationlabs.co
+  name: Integration Labs
+- domain: craze.ai
+  name: Craze
+- domain: startraven.com
+  name: Raven
+- domain: gullak.money
+  name: Gullak Money
+- domain: slidely.ai
+  name: Slidely AI
+- domain: peoplebox.ai
+  name: Peoplebox.ai
+- domain: mayalabs.io
+  name: Maya Labs
+- domain: compup.io
+  name: CompUp
+- domain: algotest.in
+  name: AlgoTest
+- domain: landeed.com
+  name: Landeed
+- domain: getcone.io
+  name: Cone
+- domain: drdroid.io
+  name: DrDroid
+- domain: floworks.ai
+  name: Floworks
+- domain: superkalam.com
+  name: SuperKalam
+- domain: clueso.io
+  name: Clueso
+- domain: yenmo.in
+  name: Yenmo
+- domain: cheq.money
+  name: CheqUPI
+- domain: infinityapp.in
+  name: Infinity
+- domain: paasa.com
+  name: Paasa
+- domain: surebright.com
+  name: SureBright
+- domain: optifye.ai
+  name: Optifye.ai
+- domain: bolna.ai
+  name: Bolna AI
+- domain: perseus.computer
+  name: Perseus
+- domain: cardboard.ai
+  name: Cardboard
 ats:
-  - board: greenhouse
-    slug: example-ai
-    domain: example-ai.in
-    name: ExampleAI
-
+- board: greenhouse
+  slug: example-ai
+  domain: example-ai.in
+  name: ExampleAI
 github:
-  - org: example-ai
-    domain: example-ai.in
-    name: ExampleAI
-
+- org: example-ai
+  domain: example-ai.in
+  name: ExampleAI
 hn_queries:
-  - "Launch HN India"
-  - "Show HN India AI"
-
+- Launch HN India
+- Show HN India AI
 extra_feeds:
-  - "https://news.google.com/rss/search?q=india+SaaS+%22SOC+2%22&hl=en-IN&gl=IN&ceid=IN:en"
+- https://news.google.com/rss/search?q=india+SaaS+%22SOC+2%22&hl=en-IN&gl=IN&ceid=IN:en
