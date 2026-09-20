@@ -1,6 +1,4 @@
 companies:
-- domain: apollofirst.xyz
-  name: Apollo
 - domain: inferedge.com
   name: InferEdge
 - domain: fieldproxy.com
@@ -19,8 +17,6 @@ companies:
   name: BharatX
 - domain: salt.pe
   name: SALT
-- domain: imt.care
-  name: IMT Care
 - domain: spadeworks.co
   name: SpadeWorks
 - domain: kaagaz.app
@@ -87,13 +83,7 @@ companies:
   name: Perseus
 - domain: cardboard.ai
   name: Cardboard
-- domain: play.google.com
-  name: RecordBook
 ats:
-- board: greenhouse
-  slug: imt
-  domain: imt.care
-  name: IMT Care
 - board: ashby
   slug: craze
   domain: craze.ai
