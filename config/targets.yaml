@@ -83,6 +83,16 @@ companies:
   name: Perseus
 - domain: cardboard.ai
   name: Cardboard
+- domain: apollofirst.xyz
+  name: Apollo
+- domain: play.google.com
+  name: RecordBook
+- domain: imt.care
+  name: IMT Care
+- domain: primevault.com
+  name: PrimeVault
+- domain: bentolabs.ai
+  name: BentoLabs AI
 ats:
 - board: ashby
   slug: craze
