@@ -93,6 +93,8 @@ companies:
   name: PrimeVault
 - domain: bentolabs.ai
   name: BentoLabs AI
+- domain: fieldproxy.ai
+  name: Fieldproxy
 ats:
 - board: ashby
   slug: craze
