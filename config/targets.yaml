@@ -95,6 +95,8 @@ companies:
   name: BentoLabs AI
 - domain: fieldproxy.ai
   name: Fieldproxy
+- domain: redapto.com
+  name: Redapto
 ats:
 - board: ashby
   slug: craze
