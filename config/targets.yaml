@@ -97,6 +97,8 @@ companies:
   name: Fieldproxy
 - domain: redapto.com
   name: Redapto
+- domain: lab0.ai
+  name: Lab0
 ats:
 - board: ashby
   slug: craze
