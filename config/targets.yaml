@@ -99,6 +99,14 @@ companies:
   name: Redapto
 - domain: lab0.ai
   name: Lab0
+- domain: shortloop.dev
+  name: ShortLoop
+- domain: ecomp.so
+  name: Efficient Computation Inc.
+- domain: projectx.cloud
+  name: ProjectX
+- domain: adalat.ai
+  name: Adalat AI
 ats:
 - board: ashby
   slug: craze
