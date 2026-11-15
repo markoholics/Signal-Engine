@@ -107,6 +107,8 @@ companies:
   name: ProjectX
 - domain: adalat.ai
   name: Adalat AI
+- domain: aravolta.com
+  name: Aravolta
 ats:
 - board: ashby
   slug: craze
